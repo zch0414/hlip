@@ -44,7 +44,7 @@ Chest CT: an example from the external Rad-ChestCT dataset.
 python inference_rad_chestct.py \
   --model vit_base_singlescan_h2_token1176 \
   --resume /path/to/vit_base_chestct_h2_token1176.pt \
-  --data /docs/tst32751/tst32751.pt \
+  --data ../../docs/tst32751/tst32751.pt
 ```
 
 Brain MRI: an example from the external BraTS23 dataset.
@@ -54,7 +54,7 @@ python inference_pub_brain_5.py \
   --resume /path/to/vit_base_brainmri_h2_token1176.pt \
   --patch-size 8 16 16 \
   --num-slices 72 \
-  --data /docs/BraTS-GLI-00459-000/ \
+  --data ../../docs/BraTS-GLI-00459-000/
 ```
 Visualizing the activation with <code>--interpret</code>.
 
@@ -65,7 +65,7 @@ python zeroshot_ct_rate.py \
   --model vit_base_singlescan_h2_token2744 \
   --resume /path/to/vit_base_chestct_h2_token2744.pt \
   --ct-rate-root /data/ct_rate/valid/ \
-  --zeroshot-template volume \
+  --zeroshot-template volume
 ```
 
 Rad-ChestCT
@@ -74,7 +74,7 @@ python zeroshot_rad_chestct.py \
   --model vit_base_singlescan_h2_token2744 \
   --resume /path/to/vit_base_chestct_h2_token2744.pt \
   --rad-chestct-root /data/rad_chestct/ \
-  --zeroshot-template volume \
+  --zeroshot-template volume
 ```
 
 Brain MRI
@@ -82,7 +82,7 @@ Brain MRI
 python pub_brain_5_embed.py \
   --model vit_base_multiscan_h2_token1176 \
   --resume /path/to/vit_base_brainmri_h2_token1176.pt \
-  --num-slices 144 \
+  --num-slices 144
 ```
 ```bash
 python zeroshot_pub_brain_5.py \
@@ -90,7 +90,7 @@ python zeroshot_pub_brain_5.py \
   --resume /path/to/vit_base_brainmri_h2_token1176.pt \
   --num-slices 144 \
   --zeroshot_prompt prompt \
-  --zeroshot_template template \
+  --zeroshot_template template
 ```
 As there are ~18K studies in the Pub-Brain-5 dataset, evaluation may take ~30 minutes. We first extract the embedding for each study, followed by zero-shot classification. This procedure supports researchers interested in prompt engineering. 
 
