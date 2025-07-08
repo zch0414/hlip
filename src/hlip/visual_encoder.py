@@ -277,7 +277,7 @@ def custom_create_vision_transformer(variant, **kwargs):
 @register_model
 def vit_base_singlescan_h2_token2744(pretrained=True, **kwargs):
     model_args = dict(
-        max_num_scans=1, slice_attn_indexes=(0, 1, 3, 4, 6, 7, 9, 10), study_attn_indexes=(2, 5, 8, 11),
+        max_num_scans=1, slice_attn_indexes=(0, 1, 3, 4, 6, 7, 9, 10), scan_attn_indexes=(2, 5, 8, 11),
         img_size=(112, 336, 336), patch_size=(8, 24, 24),
         in_chans=1, depth = 12, embed_dim=768, num_heads=12, num_classes=0, no_embed_class=True, pos_embed='none',
         embed_layer=PatchEmbed3D, 
