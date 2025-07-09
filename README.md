@@ -60,7 +60,7 @@ python inference_pub_brain_5.py \
   --resume /path/to/vit_base_brainmri_h2_token1176.pt \
   --patch-size 8 16 16 \
   --num-slices 72 \
-  --data ../../docs/BraTS-GLI-00459-000/
+  --data ../../docs/BraTS-GLI-00459-000
 ```
 Visualizing the activation with <code>--interpret</code>.
 
