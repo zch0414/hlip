@@ -38,7 +38,7 @@ def get_args_parser():
     return parser
 
 
-def loader(recon_path):
+def loader(recon_path, args):
     input_info = (float(args.input_info[0]), float(args.input_info[1]), str(args.input_info[2]))
     img = torch.load(recon_path, weights_only=True)
     img = img[None, ...].float()
