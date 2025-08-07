@@ -1,0 +1,18 @@
+{
+    "embed_dim": 768,
+    "init_logit_bias": -10,
+    "vision_cfg": {
+        "timm_model_name": "vit_base_singlescan_h2_token2744",
+        "timm_model_pretrained": true,
+        "timm_drop_path": 0.2,
+        "timm_pool": "map",
+        "timm_proj": "none"
+    },
+    "text_cfg": {
+        "hf_model_name": "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
+        "hf_tokenizer_name": "microsoft/BiomedVLP-CXR-BERT-specialized",
+        "hf_pooler_type": "cls_last_hidden_state_pooler",
+        "hf_proj_type": "linear",
+        "context_length": 512
+    }
+}
