@@ -8,6 +8,7 @@ import torch.nn.functional as F
 def resample_1d_posemb(posemb, num_samples, is_train=True):
     """resample study position embedding.
     """
+    orig_dtype = posemb.dtype
     posemb = posemb.float()
     _max = posemb.shape[1]
 
@@ -15,7 +16,7 @@ def resample_1d_posemb(posemb, num_samples, is_train=True):
     if _max < num_samples:
         assert not is_train
         posemb = F.interpolate(posemb.permute(0, 2, 1), size=num_samples, mode='linear').permute(0, 2, 1)
-        return posemb
+        return posemb.to(orig_dtype)
     
     # sample
     if num_samples <= _max:
@@ -24,21 +25,22 @@ def resample_1d_posemb(posemb, num_samples, is_train=True):
         else:
             perm = torch.arange(num_samples)
         posemb = posemb[:, perm, :]
-        return posemb
+        return posemb.to(orig_dtype)
 
 
 def resample_3d_posemb(posemb, new_size, old_size):
     # new_size and old_size should be provided with the same shape: [d, h, w]
     # d: through-place dimension, h and w: in-place dimension.
+    orig_dtype = posemb.dtype
     posemb = posemb.float()
     if new_size == old_size:
-        return posemb
+        return posemb.to(orig_dtype)
 
     # interpolate
     if old_size[0] != new_size[0] or old_size[1] != new_size[1] or old_size[2] != new_size[2]:
         posemb = F.interpolate(posemb.permute(0, 4, 1, 2, 3), size=(new_size[0], new_size[1], new_size[2]), mode='trilinear').permute(0, 2, 3, 4, 1)
 
-    return posemb
+    return posemb.to(orig_dtype)
 
 
 def study_pos_embed(max_num_scans, grid_size, embed_dim, pretrained_posemb=None): 
