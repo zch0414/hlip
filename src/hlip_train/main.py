@@ -108,7 +108,7 @@ def main(args):
         ])
 
     resume_latest = args.resume == 'latest'
-    log_base_path = os.path.join(args.logs, args.name)
+    log_base_path = os.path.join(args.logs_dir, args.name)
     args.log_path = None
     if is_master(args, local=args.log_local):
         os.makedirs(log_base_path, exist_ok=True)
@@ -178,7 +178,7 @@ def main(args):
     if is_master(args) and args.remote_sync is not None:
         # first make sure it works
         result = remote_sync(
-            os.path.join(args.logs, args.name), 
+            os.path.join(args.logs_dir, args.name), 
             os.path.join(args.remote_sync, args.name), 
             args.remote_sync_protocol
         )
@@ -190,7 +190,7 @@ def main(args):
         # if all looks good, start a process to do this every args.remote_sync_frequency seconds
         remote_sync_process = start_sync_process(
             args.remote_sync_frequency,
-            os.path.join(args.logs, args.name), 
+            os.path.join(args.logs_dir, args.name), 
             os.path.join(args.remote_sync, args.name), 
             args.remote_sync_protocol
         )
@@ -226,7 +226,7 @@ def main(args):
     random_seed(args.seed, 0)
     model_kwargs = {}
     if args.siglip:
-        model_kwargs['init_logit_scale'] = np.log(10)  # different from CLIP
+        model_kwargs['init_logit_scale'] = np.log(10)  # SigLIP np.log(10); CLIP np.log(1/0.07)
         model_kwargs['init_logit_bias'] = -10
 
     # rescan model config
@@ -320,7 +320,7 @@ def main(args):
         logging.info("Model:")
         logging.info(f"{str(model)}")
         logging.info("Params:")
-        params_file = os.path.join(args.logs, args.name, "params.txt")
+        params_file = os.path.join(args.logs_dir, args.name, "params.txt")
         with open(params_file, "w") as f:
             for name in sorted(vars(args)):
                 val = getattr(args, name)
@@ -469,7 +469,7 @@ def main(args):
             exit(1)
 
     # determine if this worker should save logs and checkpoints. only do so if it is rank == 0
-    args.save_logs = args.logs and args.logs.lower() != 'none' and is_master(args)
+    args.save_logs = args.logs_dir and args.logs_dir.lower() != 'none' and is_master(args)
     writer = None
     if args.save_logs and args.tensorboard:
         assert tensorboard is not None, "Please install tensorboard."
@@ -569,7 +569,7 @@ def main(args):
         logging.info('Final remote sync.')
         remote_sync_process.terminate()
         result = remote_sync(
-            os.path.join(args.logs, args.name), 
+            os.path.join(args.logs_dir, args.name), 
             os.path.join(args.remote_sync, args.name), 
             args.remote_sync_protocol
         )
@@ -581,7 +581,7 @@ def main(args):
 
 def copy_codebase(args):
     from shutil import copytree, ignore_patterns
-    new_code_path = os.path.join(args.logs, args.name, "code")
+    new_code_path = os.path.join(args.logs_dir, args.name, "code")
     if os.path.exists(new_code_path):
         print(
             f"Error. Experiment already exists at {new_code_path}. Use --name to specify a new experiment."

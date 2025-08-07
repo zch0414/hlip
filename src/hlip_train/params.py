@@ -143,7 +143,7 @@ def parse_args(args):
         help="Override system default cache path for model & tokenizer file downloads.",
     )
     parser.add_argument(
-        "--logs",
+        "--logs-dir",
         type=str,
         default="./logs/",
         help="Where to store tensorboard logs. Use None to avoid storing logs.",

@@ -70,7 +70,7 @@ CT-RATE
 python zeroshot_ct_rate.py \
   --model vit_base_singlescan_h2_token2744 \
   --resume /path/to/vit_base_chestct_h2_token2744.pt \
-  --ct-rate-root /data/ct_rate/valid/ \
+  --data-root /data/ct_rate/ \
   --zeroshot-template volume
 ```
 
@@ -79,7 +79,7 @@ Rad-ChestCT
 python zeroshot_rad_chestct.py \
   --model vit_base_singlescan_h2_token2744 \
   --resume /path/to/vit_base_chestct_h2_token2744.pt \
-  --rad-chestct-root /data/rad_chestct/ \
+  --data-root /data/rad_chestct/ \
   --zeroshot-template volume
 ```
 
@@ -108,6 +108,7 @@ Our training implementation is closely aligned with [open-clip](https://github.c
 
 ```bash
 torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 4 main.py \
+  --logs_dir /path/to/logs/ \
   --json-root ../../data/ct_rate/files/ --data-root /path/to/data/ct_rate/ \
   --train-data raw_annotation --input-info -1150 350 crop \
   --zeroshot-ct-rate ../../data/ct_rate/metafiles/valid_labels.csv --zeroshot-template volume \
