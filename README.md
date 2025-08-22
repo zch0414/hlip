@@ -36,14 +36,14 @@ make install-training
 ```
 
 ### Model Card
-| Data | Objective | Attention | Patch Size | Model | Performance |
+| Data | Objective | Patch Size | Attention | Model | Performance |
 | :--------: | :--------: | :--------: | :--------: | :--------: | :--------: |
-| CT-RATE (20K) | SigLIP | <code>slice</code> + <code>scan</code> | <code>8, 24, 24</code> | ViT Base | -/- |
-| CT-RATE (20K) | CLIP | <code>slice</code> + <code>scan</code> | <code>8, 24, 24</code> | [ViT Base](https://drive.google.com/file/d/1muu7L9H3KaL3nq3fNtN8kKF1eDK3R5Z4/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP | <code>scan</code> + <code>study</code> | <code>16, 16, 16</code> | [ViT Base](https://drive.google.com/file/d/1uUdcE0TYx3K2YU7FQMfwb2FsFQjQcGil/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP | <code>scan</code> + <code>study</code> | <code>8, 16, 16</code> | [ViT Base](https://drive.google.com/file/d/12BwJvd6IEZynXM8jkled0ND7t11iuySj/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP | <code>slice</code> + <code>scan</code> + <code>study</code> | <code>8, 16, 16</code> | [ViT Base](https://drive.google.com/file/d/1FgOS3W6LhnhH4gJlbASPopUEXChcjeqy/view?usp=drive_link) | -/- |
-| HeadCT (240K) | CLIP | <code>scan</code> + <code>study</code> | <code>8, 16, 16</code> | [ViT Base](https://drive.google.com/file/d/1rfoz-kzF0iwaMQ-4MuR7F4NlTjtPIZa7/view?usp=drive_link) | -/- |
+| CT-RATE (20K) | SigLIP | <code>8, 24, 24</code> | <code>slice</code> + <code>scan</code> | ViT Base | -/- |
+| CT-RATE (20K) | CLIP | <code>8, 24, 24</code> | <code>slice</code> + <code>scan</code> | [ViT Base](https://drive.google.com/file/d/1muu7L9H3KaL3nq3fNtN8kKF1eDK3R5Z4/view?usp=drive_link) | -/- |
+| BrainMRI (220K) | CLIP | <code>16, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1uUdcE0TYx3K2YU7FQMfwb2FsFQjQcGil/view?usp=drive_link) | -/- |
+| BrainMRI (220K) | CLIP |  <code>8, 16, 16</code> |<code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/12BwJvd6IEZynXM8jkled0ND7t11iuySj/view?usp=drive_link) | -/- |
+| BrainMRI (220K) | CLIP | <code>8, 16, 16</code> | <code>slice</code> + <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1FgOS3W6LhnhH4gJlbASPopUEXChcjeqy/view?usp=drive_link) | -/- |
+| HeadCT (240K) | CLIP | <code>8, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1rfoz-kzF0iwaMQ-4MuR7F4NlTjtPIZa7/view?usp=drive_link) | -/- |
 
 ### Demo
 Chest CT: an example from the external Rad-ChestCT dataset.
@@ -89,12 +89,15 @@ Brain MRI
 python pub_brain_5_embed.py \
   --model vit_base_multiscan_h2_token1176 \
   --resume /path/to/vit_base_brainmri_h2_token1176.pt \
-  --num-slices 144
+  --data-root /path/to/pub_brain_5
+  --num-slices 144 \
+  --embed-root /path/to/pub_brain_5_embed
 ```
 ```bash
 python zeroshot_pub_brain_5.py \
   --model vit_base_multiscan_h2_token1176 \
   --resume /path/to/vit_base_brainmri_h2_token1176.pt \
+  --embed-root /path/to/pub_brain_5_embed \
   --num-slices 144 \
   --zeroshot_prompt prompt \
   --zeroshot_template template
@@ -139,6 +142,7 @@ Use the following commands for <code>patch dropout</code>:
 
 Use the following commands for <code>siglip</code>:
 ```bash
+  --model siglip_vit_base_singlescan_h2_token2744 \
   --siglip
 ```
 
