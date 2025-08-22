@@ -143,6 +143,7 @@ Use the following commands for <code>patch dropout</code>:
 Use the following commands for <code>siglip</code>:
 ```bash
   --model siglip_vit_base_singlescan_h2_token2744 \
+  --beta2 0.95 \
   --siglip
 ```
 
