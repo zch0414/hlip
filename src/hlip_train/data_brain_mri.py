@@ -11,7 +11,7 @@ from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 class StudyInfo(object):
     def __init__(self, root, key, value):
-        self.scans = np.array([os.path.join(root, key, scans, 'img.pt') for scans in value['series'].keys()])
+        self.scans = np.array([os.path.join(root, key, scans, 'img.pt') for scans in value['scans']])
         self.report = np.array(value['report'])
     
     def get_report(self, shuffle):
@@ -36,9 +36,10 @@ class StudyDataset(Dataset):
         is_train=True,
         num_scans=None,
     ):
-        with open(os.path.join(json_root, input_filename, '.json'), 'r') as file:
+        with open(os.path.join(json_root, input_filename + '.json'), 'r') as file:
             studies = json.load(file)
-        self.studies = [StudyInfo(root=os.path.join(data_root, input_filename.split('_')[0]), key=key, value=value) for key, value in studies.items()]
+        self.studies = [StudyInfo(root=os.path.join(data_root, input_filename), key=key, value=value) for key, value in studies.items()]
+
         self.is_train = is_train
         self.num_scans = num_scans
         

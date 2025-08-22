@@ -11,10 +11,10 @@ import torch
 def get_args_parser():
     parser = argparse.ArgumentParser('UCSF Mets', add_help=False)
     parser.add_argument('--num-cpus', default=1, type=int)
-
-    parser.add_argument('--root-path', default='/data/ucsf_mets/', type=str)
-    parser.add_argument('--save-path', default='/data/pub_brain_5/ucsf_mets/', type=str)
-
+    parser.add_argument('--uint8', default=False, action='store_true')
+    parser.add_argument('--statistic', default=False, action='store_true')
+    parser.add_argument('--root-path', default='/path/to/ucsf_mets/', type=str)
+    parser.add_argument('--save-path', default='/path/to/pub_brain_5/ucsf_mets/', type=str)
     return parser
 
 
@@ -88,9 +88,9 @@ def load_nifti_file(path):
     img_sitk = reorient(img_sitk, tgt='RPI')
     spacing_sitk = compute_spacing(img_sitk)
     img_arr = sitk.GetArrayFromImage(img_sitk) # x, y, z -> z, y, x (d, h, w)
-    img_arr, _ = transpose2dhw(img_arr, spacing_sitk)
+    img_arr, view = transpose2dhw(img_arr, spacing_sitk)
     img_arr = clip_by_percentile(img_arr, 0.5, 99.5)
-    return img_arr
+    return img_arr, view
 
 
 def single_worker(patient_ids, root_dir, save_dir):
@@ -103,9 +103,19 @@ def single_worker(patient_ids, root_dir, save_dir):
             series_path = os.path.join(patient_dir, series, 'nifti', 'SERIES.nii.gz')
             series_save_path = os.path.join(patient_save_dir, series + '.pt')
 
-            img = load_nifti_file(series_path)
-            torch.save(torch.from_numpy(img), series_save_path)
-            logging.info(f'Study {patient_id}: {series} done!')
+            img, view = load_nifti_file(series_path)
+            
+            if args.uint8:
+                img = torch.from_numpy((img * 255)).to(torch.uint8)
+            else:
+                img = torch.from_numpy(img)
+            
+            logging.info(f"study-{patient_id}_series-{series}_view-{view}_shape-{[*img.shape]}")
+            
+            if args.statistic:
+                continue
+            else:
+                torch.save(img, series_save_path)
 
 
 def main(args):
@@ -124,9 +134,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # set logging format
-    os.makedirs('./logs/', exist_ok=True)
     logging.basicConfig(
-        filename=f'./logs/process.log',
+        filename=f'./process.log',
         filemode='w',
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'

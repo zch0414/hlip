@@ -133,6 +133,13 @@ def parse_args(args):
     parser.add_argument(
         "--zeroshot-template", type=str, default='organ', help="Zero-shot with organ prompt template or volume prompt template."
     )
+    ## additional arguments for mri model.
+    parser.add_argument(
+        "--num-scans",
+        type=int,
+        default=10,
+        help="Maximum # scans per study per training step."
+    )
 
 
     # arguments for logs

@@ -27,8 +27,10 @@ def get_args_parser():
     parser.add_argument('--model', default='vit_base_multiscan_h2_token1176', type=str)
     parser.add_argument('--resume', default='/pretrained/vit_base_brainmri_h2_token1176.pt', type=str)
     
+    parser.add_argument('--data-root', default='/path/to/pub_brain_5')
     parser.add_argument('--input-filename', default='../../data/pub_brain_5/pub_brain_5.csv')
     parser.add_argument('--num-slices', default=144, type=int)
+    parser.add_argument('--embed-root', default='/path/to/pub_brain_5_embed')
     
     parser.add_argument('--device', default='cuda:0', type=str)
     parser.add_argument('--workers', default=16, type=int)
@@ -39,13 +41,16 @@ def get_data(args, preprocess_fn):
     class PubBrain5Dataset(Dataset):
         def __init__(
             self,
+            data_root,
             input_filename,
             num_slices, transform=None,
         ):
+            self.data_root = data_root
+
             self.studies = []
             df = pd.read_csv(input_filename)
             for _, row in df.iterrows():
-                if len(os.listdir(row['study'])):
+                if len(os.listdir(os.path.join(self.data_root, row['study']))):
                     self.studies.append(row['study'])
 
             self.num_slices = num_slices
@@ -56,18 +61,16 @@ def get_data(args, preprocess_fn):
 
         def __getitem__(self, idx):
             study = self.studies[idx]
-            # check
-            assert len(os.listdir(study)) > 0, f"{study} is invalid."
 
             # load in imgs
             imgs = []
-            for scan in [os.path.join(study, p) for p in os.listdir(study)]:
+            for scan in [os.path.join(self.data_root, study, p) for p in os.listdir(os.path.join(self.data_root, study))]:
                 img = torch.load(scan, weights_only=True)
                 # check
                 if len(img.shape) == 4:
                     img = img[:, :, :, 0]
 
-                img = img[None, ...].float()
+                img = img[None, ...].float() / 255.0
 
                 # process
                 if self.transform:
@@ -94,7 +97,7 @@ def get_data(args, preprocess_fn):
             return study, torch.stack(imgs, dim=0)
     
         
-    dataset = PubBrain5Dataset(args.input_filename, args.num_slices, preprocess_fn)
+    dataset = PubBrain5Dataset(args.data_root, args.input_filename, args.num_slices, preprocess_fn)
     dataloader = DataLoader(
         dataset,
         batch_size=1,
@@ -122,7 +125,7 @@ def embed(model, dataloader, args):
                 image_features = output['image_features'].detach().cpu()
                 logit_scale = output['logit_scale'].detach().cpu()
 
-            embed_dir = study.replace('data/pub_brain_5', f"embed/pub_brain_5/{args.model}/{args.num_slices}")
+            embed_dir = os.path.join(args.embed_root, args.model, str(args.num_slices), study)
             os.makedirs(embed_dir, exist_ok=True)
             torch.save(image_features, os.path.join(embed_dir, 'image_features.pt'))
             torch.save(logit_scale, os.path.join(embed_dir, 'logit_scale.pt'))

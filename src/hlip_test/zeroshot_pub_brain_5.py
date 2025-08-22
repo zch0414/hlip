@@ -28,6 +28,7 @@ def get_args_parser():
     parser.add_argument('--resume', default='/pretrained/vit_base_brainmri_h2_token1176.pt', type=str)
     
     parser.add_argument('--tasks', nargs='+', default=['stroke', 'glioma', 'meningioma', 'metastasis', 'tumor', 'disease'])
+    parser.add_argument('--embed-root', default='/path/to/pub_brain_5_embed')
     parser.add_argument('--input-filename', default='../../data/pub_brain_5/pub_brain_5.csv')
     parser.add_argument('--num-slices', default=144, type=int)
     parser.add_argument('--zeroshot-prompt', default='prompt', type=str)
@@ -42,30 +43,30 @@ def get_data(args):
     class ZeroShotDataset(Dataset):
         def __init__(
             self,
+            embed_root,
             input_filename,
         ):
+            self.embed_root = embed_root
             self.studies = []
             df = pd.read_csv(input_filename)
             for _, row in df.iterrows():
-                if len(os.listdir(row['study'])):
+                if len(os.listdir(os.path.join(self.embed_root, args.model, str(args.num_slices), row['study']))):
                     self.studies.append((row['study'] , row[CLASSNAMES].astype(int).tolist()))
-        
+
         def __len__(self):
             return len(self.studies)
 
         def __getitem__(self, idx):
             study, target = self.studies[idx]
-            # check
-            assert len(os.listdir(study)) > 0, f"{study} is invalid."
 
             # load in image_features and logit_scale
-            embed_dir = study.replace('data/pub_brain_5', f"embed/pub_brain_5/{args.model}/{args.num_slices}")
+            embed_dir = os.path.join(self.embed_root, args.model, str(args.num_slices), study)
             image_features = torch.load(os.path.join(embed_dir, 'image_features.pt'), weights_only=True)
             logit_scale = torch.load(os.path.join(embed_dir, 'logit_scale.pt'), weights_only=True)
             return study, image_features, logit_scale, torch.as_tensor(target)
 
 
-    dataset = ZeroShotDataset(args.input_filename)
+    dataset = ZeroShotDataset(args.embed_root, args.input_filename)
     dataloader = DataLoader(
         dataset,
         batch_size=1,

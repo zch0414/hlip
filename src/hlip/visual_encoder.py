@@ -193,7 +193,7 @@ class HLIPVisualEncoder(VisionTransformer):
         
     def forward_features(self, x):
         x = self.patch_embed(x) # [b, n, d, h, w, c]
-        x, num_scans, num_slices = self._pos_embed(x) # starts from: [b * n * d, h * w, c] if have slice attn else [b * n, d * h * w, c]
+        x, num_scans, num_slices = self._pos_embed(x)
         x = self.patch_drop(x)
         x = self.norm_pre(x)
 
@@ -218,7 +218,7 @@ class HLIPVisualEncoder(VisionTransformer):
 
         if len(self.blocks) - 1 in self.scan_attn_indexes: 
             x = self._scan2study(x, num_scans)
-        elif len(self.blocks) - 1 in self.slice_attn_indexes:
+        if len(self.blocks) - 1 in self.slice_attn_indexes:
             x = self._slice2study(x, num_slices, num_scans)
             
         return self.norm(x)

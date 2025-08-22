@@ -12,10 +12,10 @@ import torch
 def get_args_parser():
     parser = argparse.ArgumentParser('Stroke', add_help=False)
     parser.add_argument('--num-cpus', default=1, type=int)
-
-    parser.add_argument('--root-path', default='/data/stroke/', type=str)
-    parser.add_argument('--save-path', default='/data/pub_brain_5/stroke/', type=str)
-
+    parser.add_argument('--uint8', default=False, action='store_true')
+    parser.add_argument('--statistic', default=False, action='store_true')
+    parser.add_argument('--root-path', default='/path/to/stroke/', type=str)
+    parser.add_argument('--save-path', default='/path/to/pub_brain_5/stroke/', type=str)
     return parser
 
 
@@ -90,15 +90,17 @@ def load_nifti_file(path):
         img_sitk = reorient(img_sitk, tgt='RPI')
         spacing_sitk = compute_spacing(img_sitk)
         img_arr = sitk.GetArrayFromImage(img_sitk) # x, y, z -> z, y, x (d, h, w)
-        img_arr, _ = transpose2dhw(img_arr, spacing_sitk)
+        img_arr, view = transpose2dhw(img_arr, spacing_sitk)
         img_arr = clip_by_percentile(img_arr, 0.5, 99.5)
-        return img_arr
+        return img_arr, view
     except Exception:
         return None
 
 
 def load_dwi(path):
-    def transpose_raw2rpi(img, orientation):
+    # load scans with nibable-style code
+    
+    def transpose_raw2rpi(img, orientation):    
         orientation_transpose = []
         try:
             orientation_transpose.append(orientation.index('R'))
@@ -128,8 +130,10 @@ def load_dwi(path):
         return spacing
 
 
-    def transpose_lps2dhw(img, spacing):
-        if np.unique(spacing).size == 1: # isotropic data
+    def transpose_lps2dhw(img, spacing): 
+        # 'lps' or 'rpi' does not matter, the order of them matters.
+        
+        if np.unique(spacing).size == 1:
             img = np.transpose(img, (2, 1, 0)) # axial
         else:
             _max_spacing_side = np.argmax(spacing, axis=-1)
@@ -168,16 +172,28 @@ def single_worker(patient_ids, root_dir, save_dir):
             series_path = os.path.join(patient_dir, series, 'nifti', 'SERIES.nii.gz')
             series_save_path = os.path.join(patient_save_dir, series + '.pt')
             
-            img = load_nifti_file(series_path)
-            if img is None:
+            output = load_nifti_file(series_path)
+            if output is None:
                 img = load_dwi(series_path)
+                view = 'dwi'
+            else:
+                img, view = output
 
             if img is None:
-                logging.warning(f'Study {patient_id}: {series} fail!')
+                logging.warning(f'study-{patient_id}_series-{series}')
                 continue
+                
+            if args.uint8:
+                img = torch.from_numpy((img * 255)).to(torch.uint8)
+            else:
+                img = torch.from_numpy(img)
             
-            torch.save(torch.from_numpy(img), series_save_path)
-            logging.info(f'Study {patient_id}: {series} done!')
+            logging.info(f"study-{patient_id}_series-{series}_view-{view}_shape-{[*img.shape]}")
+            
+            if args.statistic:
+                continue
+            else:
+                torch.save(img, series_save_path)
 
 
 def main(args):
@@ -196,9 +212,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # set logging format
-    os.makedirs('./logs/', exist_ok=True)
     logging.basicConfig(
-        filename=f'./logs/process.log',
+        filename=f'./process.log',
         filemode='w',
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s'
