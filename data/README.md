@@ -56,7 +56,7 @@ All necessary files have already been provided. There is no need to run the othe
 
 ## Pub-Brain-5
 
-We provide the <code>uid</code> of [Open-BHB](https://baobablab.github.io/bhb/dataset), [Stroke](https://www.icpsr.umich.edu/web/ICPSR/studies/38464), [BraTS23](https://www.synapse.org/Synapse:syn51156910/wiki/627000), [NYUMets](https://nyumets.org/docs/brainapi/), and [UCSFMets](https://imagingdatasets.ucsf.edu/dataset/1). All of these datasets are publicly available. Currently, Pub-Brain-5 can only be built using the <code>uid</code> we provide. We plan to offer a more convenient way to link the dataset in the future. Reference code is also provided for convenience.
+We provide the <code>uid</code> of [Open-BHB](https://baobablab.github.io/bhb/dataset), [Stroke](https://www.icpsr.umich.edu/web/ICPSR/studies/38464), [BraTS23](https://www.synapse.org/Synapse:syn51156910/wiki/627000), [NYUMets](https://nyumets.org/docs/brainapi/), and [UCSFMets](https://imagingdatasets.ucsf.edu/dataset/1). All of these datasets are publicly available. Due to licensing restrictions, Pub-Brain-5 can only be reconstructed using the provided <code>uid</code>. Reference code and process logs are included for convenience.
 
 **reference:**
 ```bib
@@ -135,3 +135,4 @@ We provide the <code>uid</code> of [Open-BHB](https://baobablab.github.io/bhb/da
   publisher={Radiological Society of North America}
 }
 ```
+
