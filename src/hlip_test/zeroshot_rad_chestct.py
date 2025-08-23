@@ -30,10 +30,10 @@ from hlip.zeroshot_metadata_rad_chestct import CLASSNAMES, ORGANS, TEMPLATES, PR
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Perform Zero-shot', add_help=False)
-    parser.add_argument('--model', default='vit_base_singlescan_h2_token2744', type=str)
-    parser.add_argument('--use-cxr-bert', default=True, action='store_false')
+    parser.add_argument('--model', default='clip_vit_base_singlescan_h2_token2744', type=str)
+    parser.add_argument('--use-cxr-bert', default=False, action='store_true')
     parser.add_argument('--lora-text', default=False, action='store_true')
-    parser.add_argument('--resume', default='/pretrained/vit_base_chestct_h2_token2744.pt', type=str)
+    parser.add_argument('--resume', default='/pretrained/chestct_clip_vit_base_singlescan_h2_token2744.pt', type=str)
 
     parser.add_argument('--data-root', default='/data/rad_chestct/')
     parser.add_argument('--zeroshot-rad-chestct', default='../../data/rad_chestct/files/rad_chestct_labels.csv', type=str)

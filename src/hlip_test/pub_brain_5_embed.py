@@ -24,8 +24,8 @@ from hlip import visual_encoder
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Extract Embeddings', add_help=False)
-    parser.add_argument('--model', default='vit_base_multiscan_h2_token1176', type=str)
-    parser.add_argument('--resume', default='/pretrained/vit_base_brainmri_h2_token1176.pt', type=str)
+    parser.add_argument('--model', default='clip_vit_base_multiscan_h2_token1176', type=str)
+    parser.add_argument('--resume', default='/pretrained/brainmri_clip_vit_base_multiscan_h2_token1176.pt', type=str)
     
     parser.add_argument('--data-root', default='/path/to/pub_brain_5')
     parser.add_argument('--input-filename', default='../../data/pub_brain_5/pub_brain_5.csv')

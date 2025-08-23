@@ -26,13 +26,13 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Inference', add_help=False)
     
     # model
-    parser.add_argument('--model', default='vit_base_multiscan_h2_token588', type=str)
+    parser.add_argument('--model', default='clip_vit_base_multiscan_h2_token588', type=str)
     parser.add_argument('--patch-size', nargs='+', default=[16, 16, 16], type=int)
-    parser.add_argument('--resume', default='/pretrained/vit_base_brainmri_h2_token588.pt', type=str)
+    parser.add_argument('--resume', default='/pretrained/brainmri_clip_vit_base_multiscan_h2_token588.pt', type=str)
     parser.add_argument('--device', default='cuda:0', type=str)
     
     # data
-    parser.add_argument('--data', default='/data/pub_brain_5/brats23/train/adult_glioma/BraTS-GLI-00459-000/')
+    parser.add_argument('--data', default='../../docs/BraTS-GLI-00459-000/')
     parser.add_argument('--num-slices', default=144, type=int)
 
     # interpret

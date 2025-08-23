@@ -24,8 +24,8 @@ from hlip.zeroshot_metadata_pub_brain_5 import CLASSNAMES, TEMPLATES, PROMPTS
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Perform Zero-shot', add_help=False)
-    parser.add_argument('--model', default='vit_base_multiscan_h2_token1176', type=str)
-    parser.add_argument('--resume', default='/pretrained/vit_base_brainmri_h2_token1176.pt', type=str)
+    parser.add_argument('--model', default='clip_vit_base_multiscan_h2_token1176', type=str)
+    parser.add_argument('--resume', default='/pretrained/brainmri_clip_vit_base_multiscan_h2_token1176.pt', type=str)
     
     parser.add_argument('--tasks', nargs='+', default=['stroke', 'glioma', 'meningioma', 'metastasis', 'tumor', 'disease'])
     parser.add_argument('--embed-root', default='/path/to/pub_brain_5_embed')

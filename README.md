@@ -49,16 +49,17 @@ make install-training
 Chest CT: an example from the external Rad-ChestCT dataset.
 ```bash
 python inference_rad_chestct.py \
-  --model vit_base_singlescan_h2_token1176 \
-  --resume /path/to/vit_base_chestct_h2_token1176.pt \
+  --model clip_vit_base_singlescan_h2_token1176 \
+  --use-cxr-bert \
+  --resume /path/to/chestct_clip_vit_base_singlescan_h2_token1176.pt \
   --data ../../docs/tst32751/tst32751.pt
 ```
 
 Brain MRI: an example from the external BraTS23 dataset.
 ```bash
 python inference_pub_brain_5.py \
-  --model vit_base_multiscan_h2_token1176 \
-  --resume /path/to/vit_base_brainmri_h2_token1176.pt \
+  --model clip_vit_base_multiscan_h2_token1176 \
+  --resume /path/to/brainmri_clip_vit_base_multiscan_h2_token1176.pt \
   --patch-size 8 16 16 \
   --num-slices 72 \
   --data ../../docs/BraTS-GLI-00459-000
@@ -69,8 +70,9 @@ Visualizing the activation with <code>--interpret</code>.
 CT-RATE
 ```bash
 python zeroshot_ct_rate.py \
-  --model vit_base_singlescan_h2_token2744 \
-  --resume /path/to/vit_base_chestct_h2_token2744.pt \
+  --model clip_vit_base_singlescan_h2_token2744 \
+  --use-cxr-bert \
+  --resume /path/to/chestct_clip_vit_base_singlescan_h2_token2744.pt \
   --data-root /data/ct_rate/ \
   --zeroshot-template volume
 ```
@@ -78,8 +80,9 @@ python zeroshot_ct_rate.py \
 Rad-ChestCT
 ```bash
 python zeroshot_rad_chestct.py \
-  --model vit_base_singlescan_h2_token2744 \
-  --resume /path/to/vit_base_chestct_h2_token2744.pt \
+  --model clip_vit_base_singlescan_h2_token2744 \
+  --use-cxr-bert \
+  --resume /path/to/chestct_clip_vit_base_singlescan_h2_token2744.pt \
   --data-root /data/rad_chestct/ \
   --zeroshot-template volume
 ```
@@ -87,16 +90,16 @@ python zeroshot_rad_chestct.py \
 Brain MRI
 ```bash
 python pub_brain_5_embed.py \
-  --model vit_base_multiscan_h2_token1176 \
-  --resume /path/to/vit_base_brainmri_h2_token1176.pt \
+  --model clip_vit_base_multiscan_h2_token1176 \
+  --resume /path/to/brainmri_clip_vit_base_multiscan_h2_token1176.pt \
   --data-root /path/to/pub_brain_5
   --num-slices 144 \
   --embed-root /path/to/pub_brain_5_embed
 ```
 ```bash
 python zeroshot_pub_brain_5.py \
-  --model vit_base_multiscan_h2_token1176 \
-  --resume /path/to/vit_base_brainmri_h2_token1176.pt \
+  --model clip_vit_base_multiscan_h2_token1176 \
+  --resume /path/to/brainmri_clip_vit_base_multiscan_h2_token1176.pt \
   --embed-root /path/to/pub_brain_5_embed \
   --num-slices 144 \
   --zeroshot_prompt prompt \
@@ -129,7 +132,7 @@ torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 4 main.py \
   --precision amp \
   --workers 4 \
   --grad-checkpointing \
-  --model vit_base_singlescan_h2_token2744 \
+  --model clip_vit_base_singlescan_h2_token2744 \
   --use-cxr-bert \
   --lock-text
 ```

@@ -23,10 +23,10 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Inference', add_help=False)
     
     # model
-    parser.add_argument('--model', default='vit_base_singlescan_h2_token2744', type=str)
+    parser.add_argument('--model', default='clip_vit_base_singlescan_h2_token2744', type=str)
     parser.add_argument('--lora-text', default=False, action='store_true')
-    parser.add_argument('--use-cxr-bert', default=True, action='store_false')
-    parser.add_argument('--resume', default='/pretrained/vit_base_chestct_h2_token2744.pt', type=str)
+    parser.add_argument('--use-cxr-bert', default=False, action='store_true')
+    parser.add_argument('--resume', default='/pretrained/chestct_clip_vit_base_singlescan_h2_token2744.pt', type=str)
     parser.add_argument('--device', default='cuda:0', type=str)
     
     # data
