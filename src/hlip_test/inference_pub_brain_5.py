@@ -49,7 +49,7 @@ def loader(study_path, num_slices):
         img = torch.load(scan, weights_only=True)
         if len(img.shape) == 4:
             img = img[:, :, :, 0]
-        img = img[None, ...].float()
+        img = img[None, ...].float() / 255.0 # NOTE: rescale to [0, 1] 
 
         # padding to the longest side   
         _, _, h, w = img.shape             
@@ -165,7 +165,8 @@ def inference(model, tokenizer, image, args):
         )
     
     # warpper model
-    apply_interpret(model.visual.trunk)
+    if args.interpret:
+        apply_interpret(model.visual.trunk)
     
     # inference
     output = model(image=image)
