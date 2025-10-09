@@ -148,3 +148,4 @@ core.*
 results/
 wandb/
 logs/
+hf_staging/
