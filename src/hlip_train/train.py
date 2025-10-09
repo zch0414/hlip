@@ -90,7 +90,7 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
     for i, mini_batch in enumerate(dataloader):
         i_accum = i // (args.accum_freq * args.accum_batch)
         step = num_batches_per_epoch * epoch + i_accum
-        
+
         if not args.skip_scheduler:
             scheduler(step)
 
@@ -113,12 +113,13 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                     with torch.no_grad():
                         dist_model_out = dist_model(images, texts)
                     model_out.update({f'dist_{k}': v for k, v in dist_model_out.items()})
-
                 losses = loss(**model_out, output_dict=True)
+
                 total_loss = sum(losses.values())
                 losses["loss"] = total_loss
 
             backward(total_loss, scaler)
+            images, texts = [], []
         else:
             # First, cache the features without any gradient tracking.
             with torch.no_grad():
@@ -135,9 +136,11 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                             accum_features[key] = [val]
 
                 accum_images.append(images); accum_texts.append(texts)
+            
+            images, texts = [], []
 
             # If (i + 1) % accum_freq is not zero, move on to the next batch.
-            if ((i + 1) % args.accum_freq) > 0:
+            if ((i + 1) % (args.accum_batch * args.accum_freq)) > 0:
                 # FIXME this makes data time logging unreliable when accumulating
                 continue
 
@@ -191,6 +194,7 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
         # reset gradient accum, if enabled
         if args.accum_freq > 1:
             accum_images, accum_texts, accum_features = [], [], {}
+        images, texts = [], []
 
         # Note: we clamp to 4.6052 = ln(100), as in the original paper.
         with torch.no_grad():
@@ -200,8 +204,8 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
         end = time.time()
         batch_count = i_accum + 1
         if is_master(args) and (i_accum % args.log_every_n_steps == 0 or batch_count == num_batches_per_epoch):
-            batch_size = len(images)
-            num_samples = batch_count * batch_size * args.accum_freq * args.world_size
+            # batch_size = len(images)
+            num_samples = batch_count * args.batch_size * args.accum_batch * args.accum_freq * args.world_size
             samples_per_epoch = dataloader.num_samples
             percent_complete = 100.0 * batch_count / num_batches_per_epoch
 
@@ -209,7 +213,7 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
             for key, val in losses.items():
                 if key not in losses_m:
                     losses_m[key] = AverageMeter()
-                losses_m[key].update(val.item(), batch_size)
+                losses_m[key].update(val.item(), args.batch_size * args.accum_batch)
 
             logit_scale_scalar = logit_scale.item()
             loss_log = " ".join(
@@ -218,8 +222,8 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                     for loss_name, loss_m in losses_m.items()
                 ]
             )
-            samples_per_second = args.accum_freq * args.batch_size * args.world_size / batch_time_m.val
-            samples_per_second_per_gpu = args.accum_freq * args.batch_size / batch_time_m.val
+            samples_per_second = args.accum_batch * args.accum_freq * args.batch_size * args.world_size / batch_time_m.val
+            samples_per_second_per_gpu = args.accum_batch * args.accum_freq * args.batch_size / batch_time_m.val
             logging.info(
                 f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] "
                 f"Data (t): {data_time_m.avg:.3f} "
@@ -253,9 +257,6 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
             # resetting batch / data time meters per log window
             batch_time_m.reset()
             data_time_m.reset()
-        
-        # reset batch accum
-        images, texts = [], []
     # end for
 
 
