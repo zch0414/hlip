@@ -1,5 +1,5 @@
 import torch.nn as nn
-    
+
 
 class PatchEmbed3D(nn.Module):
     """ 3D Image to Patch Embedding

@@ -32,8 +32,9 @@ try:
 except ImportError:
     hvd = None
 
-from hlip_train.data_brain_mri import get_data as get_data_brain_mri
-from hlip_train.data_chest_ct import get_data as get_data_chest_ct
+from hlip import visual_encoder, visual_encoder_rope
+
+from hlip_train.data import get_data
 from hlip_train.params import parse_args
 from hlip_train.train import train_one_epoch, evaluate
 
@@ -99,12 +100,8 @@ def main(args):
             # sync date_str from master to all ranks
             date_str = broadcast_object(args, date_str)
         args.name = '-'.join([
-            date_str,
-            f"model_{model_name_safe}",
-            f"lr_{args.lr}",
-            f"b_{args.batch_size*args.accum_batch}",
-            f"j_{args.workers}",
-            f"p_{args.precision}",
+            f"DATE_{date_str}",
+            f"MODEL_{model_name_safe}",
         ])
 
     resume_latest = args.resume == 'latest'
@@ -229,7 +226,7 @@ def main(args):
         model_kwargs['init_logit_scale'] = np.log(10)  # SigLIP np.log(10); CLIP np.log(1/0.07)
         model_kwargs['init_logit_bias'] = -10
 
-    # rescan model config
+    # NOTE rescan hlip config
     for _c in os.listdir('../hlip/model_configs/'):
         _m, _e = os.path.splitext(_c)
         if _e.lower() == '.json':
@@ -237,7 +234,7 @@ def main(args):
                 model_cfg = json.load(f)
             _MODEL_CONFIGS[_m] = model_cfg
 
-    model, preprocess_train, preprocess_val = create_model_and_transforms(
+    model, _, _ = create_model_and_transforms(
         args.model,
         args.pretrained,
         precision=args.precision,
@@ -257,25 +254,6 @@ def main(args):
         cache_dir=args.cache_dir,
         **model_kwargs,
     )
-
-    if args.use_cxr_bert:
-        from transformers import AutoModel
-        cxr_bert = AutoModel.from_pretrained('microsoft/BiomedVLP-CXR-BERT-specialized', trust_remote_code=True).bert
-        if args.lora_text:
-            from peft import LoraConfig, get_peft_model
-            lora_config = LoraConfig(
-                r=8,
-                lora_alpha=8,
-                target_modules=["query", "value"],
-                lora_dropout=0.0,
-                bias="none",
-            )
-            cxr_bert = get_peft_model(cxr_bert, lora_config)
-            for n, p in cxr_bert.named_parameters():
-                p.requires_grad = (not args.lock_text_freeze_layer_norm) if "LayerNorm" in n.split(".") else False
-        cxr_bert.to(device=device)
-        model.text.transformer = cxr_bert
-
     if args.distill:
         # FIXME: currently assumes the model you're distilling from has the same tokenizer & transforms.
         dist_model, _, _ = create_model_and_transforms(
@@ -301,6 +279,7 @@ def main(args):
     random_seed(args.seed, args.rank)
 
     if args.trace:
+        # NOTE batch_size = args.batch_size * args.accum_batch
         model = trace_model(model, batch_size=args.batch_size*args.accum_batch, device=device)
 
     if args.lock_image:
@@ -334,8 +313,6 @@ def main(args):
         if args.ddp_static_graph:
             # this doesn't exist in older PyTorch, arg only added if enabled
             ddp_args['static_graph'] = True
-        if args.lora_text:
-            ddp_args['find_unused_parameters'] = True
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[device], **ddp_args)
     
         if args.distill:
@@ -430,22 +407,13 @@ def main(args):
         checkpoint = pt_load(args.finetune, map_location='cpu')
         model.load_state_dict(checkpoint["state_dict"])
         logging.info(f"=> loaded checkpoint '{args.finetune}' (epoch {start_epoch})")
-    # for evaluation, use resume but do not set args.train_data
 
     # initialize datasets
-    tokenizer = get_tokenizer(args.model, cache_dir=args.cache_dir, trust_remote_code=True)
-    if args.wandb_project_name == 'brain_mri':
-        data = get_data_brain_mri(
-            args,
-            tokenizer=tokenizer,
-        )
-    elif args.wandb_project_name == 'chest_ct':
-        data = get_data_chest_ct(
-            args,
-            tokenizer=tokenizer,
-        )
-    else:
-        raise NotImplementedError
+    tokenizer = get_tokenizer(args.model, cache_dir=args.cache_dir)
+    data = get_data(
+        args,
+        tokenizer=tokenizer,
+    )
     assert len(data), 'At least one train or eval dataset must be specified.'
 
     # create scheduler if train
@@ -478,9 +446,10 @@ def main(args):
     if args.wandb and is_master(args):
         assert wandb is not None, 'Please install wandb.'
         logging.debug('Starting wandb.')
-        args.train_sz = data["train"].dataloader.num_samples
-        if args.val_data is not None:
-            args.val_sz = data["val"].dataloader.num_samples
+        if 'train' in data:
+            args.train_size = data['train'].dataloader.num_samples
+        if 'valid' in data:
+            args.valid_size = data['valid'].dataloader.num_samples
         # you will have to configure this for your project!
         wandb.init(
             project=args.wandb_project_name,
@@ -488,7 +457,7 @@ def main(args):
             id=args.name,
             notes=args.wandb_notes,
             tags=[],
-            resume='auto' if args.resume == "latest" else None,
+            resume='auto' if args.resume else None,
             config=vars(args),
         )
         if args.debug:
@@ -528,7 +497,7 @@ def main(args):
         train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist_model, args, tb_writer=writer)
         completed_epoch = epoch + 1
 
-        if any(v in data for v in ('val', 'zeroshot-ct-rate')):
+        if any(v in data for v in ('valid', 'mri', 'ct')):
             evaluate(model, data, completed_epoch, args, tb_writer=writer, tokenizer=tokenizer)
 
         # Saving checkpoints.

@@ -1,162 +1,164 @@
-# HLIP
-> Official PyTorch implementation of the following paper:\
-> Towards Scalable Language-Image Pre-training for 3D Medical Imaging\
-> University of Michigan\
-> [![arXiv](https://img.shields.io/badge/arXiv%20paper-2505.21862-b31b1b.svg)](https://arxiv.org/abs/2505.21862)&nbsp;
+# HLIP Ablation
 
+## Scripts
 
-## Overview
-<p align="center">
-  <img
-    src="docs/github.png"
-    alt="HLIP overview"
-    style="width:96%; max-width:800px; height:auto;"
-  />
-</p>
-
-Directly leveraging uncurated clinical studies enables scalable language-image pre-training in 3D medical imaging, as the scale is no longer constrained by the manual effort required from clinicians to select a single representative scan or slice from each study. This paradigm could be more effective when equipped with a hierarchical attention mechanism inspired by the natural structure of the data: slice, scan, and study. We name this framework **H**ierarchical attention for **L**anguage-**I**mage **P**re-training (**HLIP**). For real-world clinical use, HLIP can be applied to studies containing either a single scan (e.g., chest CT) or multiple scans (e.g., brain MRI).
-
-## Updates
-- **(2025-06)** Complete the initiation of HLIP repository.
-- **(2025-05)** Release HLIP models trained on chest CT and brain MRI, feel free to try our demos.
-
-## Getting Started
-
-### Install 
-[open-clip](https://github.com/mlfoundations/open_clip/tree/main)
+**Pre-training (MRI)**
 ```bash
-python3 -m venv env
-source env/bin/activate
-pip install -U pip
-pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu121
-git clone git@github.com:mlfoundations/open_clip.git
-cd open_clip
-make install
-make install-training
+torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 main.py \
+--logs-dir /path/to/logs/ \
+--train-data-filelist /path/to/data/mri/train/ \
+--valid-data-filelist /path/to/data/mri/valid/ \
+--train-scan-filedict /path/to/data/mri/train/='["/path/to/MR/scans/train.json"]' \
+--valid-scan-filedict /path/to/data/mri/valid/='["/path/to/MR/scans/valid.json"]' \
+--train-report-filedict /path/to/data/mri/train/='["/path/to/MR/reports/train.json"]' \
+--valid-report-filedict /path/to/data/mri/valid/='["/path/to/MR/reports/valid.json"]' \
+--zeroshot-frequency 1 \
+--save-frequency 1 \
+--report-to wandb \
+--wandb-project-name hlip-ablation \
+--train-data train \
+--valid-data valid \
+--mri data_root='"/path/to/data/mri/test/"' input_file='"../../data/mri.csv"' \
+--num-scans 8 \
+--warmup 1600 \
+--batch-size 8 \
+--accum-batch 6 \
+--accum-freq 1 \
+--lr 3e-4 \
+--wd 0.2 \
+--force-patch-dropout 0.50 \
+--beta2 0.95 \
+--epochs 25 \
+--precision amp \
+--workers 8 \
+--grad-checkpointing \
+--model ablate_seqposemb_clip_vit_base_multiscan_h2_dinotxt1568 \
+--dist-url "env://localhost:29500"
 ```
 
-### Model Card
-| Data | Objective | Patch Size | Attention | Model | Performance |
-| :--------: | :--------: | :--------: | :--------: | :--------: | :--------: |
-| CT-RATE (20K) | SigLIP | <code>8, 24, 24</code> | <code>slice</code> + <code>scan</code> | ViT Base | -/- |
-| CT-RATE (20K) | CLIP | <code>8, 24, 24</code> | <code>slice</code> + <code>scan</code> | [ViT Base](https://drive.google.com/file/d/1muu7L9H3KaL3nq3fNtN8kKF1eDK3R5Z4/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP | <code>16, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1uUdcE0TYx3K2YU7FQMfwb2FsFQjQcGil/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP |  <code>8, 16, 16</code> |<code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/12BwJvd6IEZynXM8jkled0ND7t11iuySj/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP | <code>8, 16, 16</code> | <code>slice</code> + <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1FgOS3W6LhnhH4gJlbASPopUEXChcjeqy/view?usp=drive_link) | -/- |
-| HeadCT (240K) | CLIP | <code>8, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1rfoz-kzF0iwaMQ-4MuR7F4NlTjtPIZa7/view?usp=drive_link) | -/- |
-
-### Demo
-Chest CT: an example from the external Rad-ChestCT dataset.
+**Pre-training (CT)**
 ```bash
-python inference_rad_chestct.py \
-  --model clip_vit_base_singlescan_h2_token1176 \
-  --use-cxr-bert \
-  --resume /path/to/chestct_clip_vit_base_singlescan_h2_token1176.pt \
-  --data ../../docs/tst32751/tst32751.pt
+torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 main.py \
+--logs-dir /path/to/logs/ \
+--train-data-filelist /path/to/data/ct/train/ \
+--valid-data-filelist /path/to/data/ct/valid/ \
+--train-scan-filedict /path/to/data/ct/train/='["/path/to/CT/scans/train.json"]' \
+--valid-scan-filedict /path/to/data/ct/valid/='["/path/to/CT/scans/valid.json"]' \
+--train-report-filedict /path/to/data/ct/train/='["/path/to/CT/reports/train.json"]' \
+--valid-report-filedict /path/to/data/ct/valid/='["/path/to/CT/reports/valid.json"]' \
+--zeroshot-frequency 1 \
+--save-frequency 1 \
+--report-to wandb \
+--wandb-project-name hlip-ablation \
+--train-data train \
+--valid-data valid \
+--ct data_root='"/path/to/data/ct/test/"' input_file='"../../data/ct.csv"' \
+--num-scans 10 \
+--warmup 2500 \
+--batch-size 8 \
+--accum-batch 4 \
+--accum-freq 1 \
+--lr 2e-4 \
+--wd 0.2 \
+--force-patch-dropout 0.25 \
+--beta2 0.95 \
+--epochs 20 \
+--precision amp \
+--workers 8 \
+--grad-checkpointing \
+--model ablate_seqposemb_clip_vit_base_multiscan_h2_dinotxt1568 \
+--dist-url "env://localhost:29500"
 ```
 
-Brain MRI: an example from the external BraTS23 dataset.
+**Pre-training (MRI&CT)**
 ```bash
-python inference_pub_brain_5.py \
-  --model clip_vit_base_multiscan_h2_token1176 \
-  --resume /path/to/brainmri_clip_vit_base_multiscan_h2_token1176.pt \
-  --patch-size 8 16 16 \
-  --num-slices 72 \
-  --data ../../docs/BraTS-GLI-00459-000
-```
-Visualizing the activation with <code>--interpret</code>.
-
-### Evaluation
-CT-RATE
-```bash
-python zeroshot_ct_rate.py \
-  --model clip_vit_base_singlescan_h2_token2744 \
-  --use-cxr-bert \
-  --resume /path/to/chestct_clip_vit_base_singlescan_h2_token2744.pt \
-  --data-root /data/ct_rate/ \
-  --zeroshot-template volume
-```
-
-Rad-ChestCT
-```bash
-python zeroshot_rad_chestct.py \
-  --model clip_vit_base_singlescan_h2_token2744 \
-  --use-cxr-bert \
-  --resume /path/to/chestct_clip_vit_base_singlescan_h2_token2744.pt \
-  --data-root /data/rad_chestct/ \
-  --zeroshot-template volume
-```
-
-Brain MRI
-```bash
-python pub_brain_5_embed.py \
-  --model clip_vit_base_multiscan_h2_token1176 \
-  --resume /path/to/brainmri_clip_vit_base_multiscan_h2_token1176.pt \
-  --data-root /path/to/pub_brain_5
-  --num-slices 144 \
-  --embed-root /path/to/pub_brain_5_embed
-```
-```bash
-python zeroshot_pub_brain_5.py \
-  --model clip_vit_base_multiscan_h2_token1176 \
-  --resume /path/to/brainmri_clip_vit_base_multiscan_h2_token1176.pt \
-  --embed-root /path/to/pub_brain_5_embed \
-  --num-slices 144 \
-  --zeroshot_prompt prompt \
-  --zeroshot_template template
-```
-As there are ~18K studies in the Pub-Brain-5 dataset, evaluation may take ~30 minutes. We first extract the embedding for each study, followed by zero-shot classification. This procedure supports researchers interested in prompt engineering. 
-
-<code>--num-slices</code> is set to 144 during evaluation, though we use a fixed input size of <code>48, 224, 224</code>. We found that HLIP can directly transfer and benefit from higher-resolution inputs at test time.
-
-### Training
-
-Our training implementation is closely aligned with [open-clip](https://github.com/mlfoundations/open_clip/tree/main), allowing us to leverage features such as <code>patch dropout</code> and <code>siglip</code>. Below, we provide a training code demo for chest CT. Training on CT-RATE for 20 epochs takes ~6 hours using a node with 4 A40 GPUs.
-
-```bash
-torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 4 main.py \
-  --logs_dir /path/to/logs/ \
-  --json-root ../../data/ct_rate/files/ --data-root /path/to/data/ct_rate/ \
-  --train-data raw_annotation --input-info -1150 350 crop \
-  --zeroshot-ct-rate ../../data/ct_rate/metafiles/valid_labels.csv --zeroshot-template volume \
-  --zeroshot-frequency 1 \
-  --save-frequency 1 \
-  --report-to wandb \
-  --wandb-project-name chest_ct \
-  --warmup 377 \
-  --batch-size 16 \
-  --accum-batch 1 \
-  --lr=1e-5 \
-  --wd=0.2 \
-  --epochs=20 \
-  --precision amp \
-  --workers 4 \
-  --grad-checkpointing \
-  --model clip_vit_base_singlescan_h2_token2744 \
-  --use-cxr-bert \
-  --lock-text
+torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 main.py \
+--logs-dir /path/to/logs/ \
+--train-data-filelist /path/to/data/mri/train/ /path/to/data/ct/train/ \
+--valid-data-filelist /path/to/data/mri/valid/ /path/to/data/ct/valid/ \
+--train-scan-filedict /path/to/data/mri/train/='["/path/to/MR/scans/train.json"]' /path/to/data/ct/train/='["/path/to/CT/scans/train.json"]'  \
+--valid-scan-filedict /path/to/data/mri/valid/='["/path/to/MR/scans/valid.json"]' /path/to/data/ct/valid/='["/path/to/CT/scans/valid.json"]' \
+--train-report-filedict /path/to/data/mri/train/='["/path/to/MR/reports/train.json"]' /path/to/data/ct/train/='["/path/to/CT/reports/train.json"]' \
+--valid-report-filedict /path/to/data/mri/valid/='["/path/to/MR/reports/valid.json"]' /path/to/data/ct/valid/='["/path/to/CT/reports/valid.json"]' \
+--zeroshot-frequency 1 \
+--save-frequency 1 \
+--report-to wandb \
+--wandb-project-name hlip-ablation \
+--train-data train \
+--valid-data valid \
+--ct data_root='"/path/to/data/ct/test/"' input_file='"../../data/ct.csv"' \
+--mri data_root='"/path/to/data/mri/test/"' input_file='"../../data/mri.csv"' \
+--num-scans 8 \
+--warmup 2400 \
+--batch-size 8 \
+--accum-batch 6 \
+--accum-freq 2 \
+--lr 4e-4 \
+--wd 0.2 \
+--force-patch-dropout 0.50 \
+--beta2 0.95 \
+--epochs 25 \
+--precision amp \
+--workers 8 \
+--grad-checkpointing \
+--model ablate_seqposemb_clip_vit_base_multiscan_h2_dinotxt1568 \
+--dist-url "env://localhost:29500"
 ```
 
-Use the following commands for <code>patch dropout</code>:
+
+**Unmasked Fine-tuning (MRI&CT)**
 ```bash
-  --force-patch-dropout 0.5 \
-  --beta2 0.95
+torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 main.py \
+--logs-dir /path/to/logs/ \
+--train-data-filelist /path/to/data/mri/train/ /path/to/data/ct/train/ \
+--valid-data-filelist /path/to/data/mri/valid/ /path/to/data/ct/valid/ \
+--train-scan-filedict /path/to/data/mri/train/='["/path/to/MR/scans/train.json"]' /path/to/data/ct/train/='["/path/to/CT/scans/train.json"]'  \
+--valid-scan-filedict /path/to/data/mri/valid/='["/path/to/MR/scans/valid.json"]' /path/to/data/ct/valid/='["/path/to/CT/scans/valid.json"]' \
+--train-report-filedict /path/to/data/mri/train/='["/path/to/MR/reports/gpt3.5/train.json"]' /path/to/data/ct/train/='["/path/to/CT/reports/gpt3.5/train.json"]' \
+--valid-report-filedict /path/to/data/mri/valid/='["/path/to/MR/reports/gpt3.5/valid.json"]' /path/to/data/ct/valid/='["/path/to/CT/reports/gpt3.5/valid.json"]' \
+--zeroshot-frequency 1 \
+--save-frequency 1 \
+--report-to wandb \
+--wandb-project-name hlip-ablation \
+--train-data train \
+--valid-data valid \
+--ct data_root='"/path/to/data/ct/test/"' input_file='"../../data/ct.csv"' \
+--mri data_root='"/path/to/data/mri/test/"' input_file='"../../data/mri.csv"' \
+--num-scans 8 \
+--warmup 400 \
+--batch-size 4 \
+--accum-batch 4 \
+--accum-freq 6 \
+--lr 5e-5 \
+--wd 0.2 \
+--force-patch-dropout 0.0 \
+--beta2 0.95 \
+--epochs 5 \
+--precision amp \
+--workers 8 \
+--grad-checkpointing \
+--seed 42 \
+--finetune "/path/to/logs/model/checkpoints/epoch_25.pt" \
+--model ablate_rope_clip_vit_base_multiscan_h2_dinotxt1568 \
+--dist-url "env://localhost:29500"
 ```
 
-Use the following commands for <code>siglip</code>:
+
+**External Evaluation (Pub-Brain-5)**
 ```bash
-  --model siglip_vit_base_singlescan_h2_token2744 \
-  --beta2 0.95 \
-  --siglip
+torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 zeroshot_pubbrain5.py \
+--model ablate_seqposemb_clip_vit_base_multiscan_h2_dinotxt1568 \
+--resume /path/to/logs/model/checkpoints/epoch_5.pt \
+--data-root /path/to/data/pub_brain_5/ \
+--workers 8
 ```
 
-## Citation
-If you find this repository helpful, please consider citing:
-```bib
-@article{zhao2025towards,
-  title={Towards Scalable Language-Image Pre-training for 3D Medical Imaging},
-  author={Zhao, Chenhui and Lyu, Yiwei and Chowdury, Asadur and Harake, Edward and Kondepudi, Akhil and Rao, Akshay and Hou, Xinhai and Lee, Honglak and Hollon, Todd},
-  journal={arXiv preprint arXiv:2505.21862},
-  year={2025}
-}
+
+**External Evaluation (RSNA)**
+```bash
+torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 zeroshot_rsna.py \
+--model ablate_seqposemb_clip_vit_base_multiscan_h2_dinotxt1568 \
+--resume /path/to/logs/model/checkpoints/epoch_5.pt \
+--data-root /path/to/data/RSNA \
+--workers 8
 ```

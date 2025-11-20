@@ -21,14 +21,6 @@ class ParseKwargs(argparse.Action):
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
-
-    # arguments for dataset
-    parser.add_argument(
-        "--data-root",
-        type=str,
-        default=None,
-        help="Path to data.",
-    )
     parser.add_argument(
         "--train-data",
         type=str,
@@ -46,7 +38,7 @@ def parse_args(args):
         )
     )
     parser.add_argument(
-        "--val-data",
+        "--valid-data",
         type=str,
         default=None,
         help="Path to file(s) with validation data",
@@ -58,7 +50,7 @@ def parse_args(args):
         help="Number of samples in dataset. Required for webdataset if not available in info file.",
     )
     parser.add_argument(
-        "--val-num-samples",
+        "--valid-num-samples",
         type=int,
         default=None,
         help="Number of samples in dataset. Useful for webdataset if not available in info file.",
@@ -74,12 +66,6 @@ def parse_args(args):
         default=False,
         action="store_true",
         help="Whether to use sampling with replacement for webdataset shard selection."
-    )
-    parser.add_argument(
-        "--json-root",
-        type=str,
-        default=None,
-        help="Path to json file(s).",
     )
     parser.add_argument(
         "--csv-separator",
@@ -111,38 +97,6 @@ def parse_args(args):
         default=None,
         help="Path to imagenet v2 for conducting zero shot evaluation.",
     )
-    ## additional arguments for chest ct dataset
-    parser.add_argument(
-        "--input-info",
-        nargs="+",
-        default=["-1150", "350", "crop"],
-        help="Input information: [min, max, batch construction].",
-    )
-    parser.add_argument(
-        "--zeroshot-ct-rate",
-        type=str,
-        default=None,
-        help="Data for CT-RATE zero-shot evaluation."
-    )
-    parser.add_argument(
-        "--zeroshot-rad-chestct",
-        type=str,
-        default=None,
-        help="Data for RAD-ChestCT zero-shot evaluation."
-    )
-    parser.add_argument(
-        "--zeroshot-template", type=str, default='organ', help="Zero-shot with organ prompt template or volume prompt template."
-    )
-    ## additional arguments for mri model.
-    parser.add_argument(
-        "--num-scans",
-        type=int,
-        default=10,
-        help="Maximum # scans per study per training step."
-    )
-
-
-    # arguments for logs
     parser.add_argument(
         "--cache-dir",
         type=str,
@@ -167,9 +121,6 @@ def parse_args(args):
         default=None,
         help="Optional identifier for the experiment when storing logs. Otherwise use current time.",
     )
-
-
-    # arguments for training
     parser.add_argument(
         "--workers", type=int, default=4, help="Number of dataloader workers per GPU."
     )
@@ -234,23 +185,14 @@ def parse_args(args):
         "--zeroshot-frequency", type=int, default=2, help="How often to run zero shot."
     )
     parser.add_argument(
-        "--val-frequency", type=int, default=1, help="How often to run evaluation with val data."
+        "--valid-frequency", type=int, default=1, help="How often to run evaluation with val data."
     )
     parser.add_argument(
         "--resume",
         default=None,
         type=str,
-        help="path to resume checkpoint (default: none)",
+        help="Path to resume checkpoint (default: none)",
     )
-    parser.add_argument(
-        "--finetune",
-        default=None,
-        type=str,
-        help="path to finetune checkpoint (default: none)",
-    )
-
-
-    # arguments for model
     parser.add_argument(
         "--precision",
         choices=["amp", "amp_bf16", "amp_bfloat16", "bf16", "fp16", "pure_bf16", "pure_fp16", "fp32"],
@@ -308,47 +250,8 @@ def parse_args(args):
         '--image-resize-mode',
         default=None, type=str, choices=['shortest', 'longest', 'squash'],
         help="Override default image resize (& crop) mode during inference"
-    )      
-    parser.add_argument(
-        "--lock-text",
-        default=False,
-        action='store_true',
-        help="Lock full text tower by disabling gradients.",
-    )
-    parser.add_argument(
-        "--lock-text-unlocked-layers",
-        type=int,
-        default=0,
-        help="Leave last n text tower layer groups unlocked.",
-    )
-    parser.add_argument(
-        "--lock-text-freeze-layer-norm",
-        default=False,
-        action='store_true',
-        help="Freeze LayerNorm running stats in text tower for any locked layers.",
-    )
-    parser.add_argument(
-        "--lora-text",
-        default=False,
-        action='store_true',
-        help="Use LoRA for the text tower.",
     )
     parser.add_argument('--aug-cfg', nargs='*', default={}, action=ParseKwargs)
-    ## additional arguments for cxr-bert
-    parser.add_argument(
-        '--use-cxr-bert',
-        default=False, action='store_true',
-        help="Override the text encoder with CXR-BERT."
-    )
-
-
-    # arguments for optimize CPU memory.
-    parser.add_argument(
-        "--accum-batch", type=int, default=1, help="Alleviate CPU's out-of-memory problem. It is independent to --accum-freq."
-    )
-
-
-    # arguments for optimize GPU memory.
     parser.add_argument(
         "--grad-checkpointing",
         default=False,
@@ -408,14 +311,11 @@ def parse_args(args):
         help="torch.jit.trace the model for inference / eval only",
     )
     parser.add_argument(
-        "--accum-freq", type=int, default=1, help="Update the model every --acumm-freq steps."
+        "--accum-freq", type=int, default=1, help="Update the model every --acum-freq steps."
     )
     parser.add_argument(
         "--device", default="cuda", type=str, help="Accelerator to use."
     )
-
-
-    # arguments for distributed training
     parser.add_argument(
         "--dist-url",
         default=None,
@@ -428,9 +328,6 @@ def parse_args(args):
         type=str,
         help="distributed backend. \"nccl\" for GPU, \"hccl\" for Ascend NPU"
     )
-
-
-    # argments for third party logs.
     parser.add_argument(
         "--report-to",
         default='',
@@ -446,7 +343,7 @@ def parse_args(args):
     parser.add_argument(
         "--wandb-project-name",
         type=str,
-        default='brain_mri',
+        default='hlip-2',
         help="Name of the project if logging with wandb.",
     )
     parser.add_argument(
@@ -486,14 +383,29 @@ def parse_args(args):
         "--grad-clip-norm", type=float, default=None, help="Gradient clip."
     )
     parser.add_argument(
+        "--lock-text",
+        default=False,
+        action='store_true',
+        help="Lock full text tower by disabling gradients.",
+    )
+    parser.add_argument(
+        "--lock-text-unlocked-layers",
+        type=int,
+        default=0,
+        help="Leave last n text tower layer groups unlocked.",
+    )
+    parser.add_argument(
+        "--lock-text-freeze-layer-norm",
+        default=False,
+        action='store_true',
+        help="Freeze LayerNorm running stats in text tower for any locked layers.",
+    )
+    parser.add_argument(
         "--log-every-n-steps",
         type=int,
         default=100,
         help="Log every n steps to tensorboard/console/wandb.",
     )
-
-
-    # loss
     parser.add_argument(
         "--coca-caption-loss-weight",
         type=float,
@@ -559,13 +471,95 @@ def parse_args(args):
         help='A string to specify a specific distributed loss implementation.'
     )
 
-    args = parser.parse_args(args)
+    # Arguments for HLIP-2.
+    parser.add_argument(
+        "--train-data-filelist",
+        nargs='+',
+        default=None,
+        type=str,
+        help="List of data path for training."
+    )
+    parser.add_argument(
+        "--valid-data-filelist",
+        nargs='+',
+        default=None,
+        type=str,
+        help="List of data path for validation."
+    )
+    parser.add_argument(
+        "--train-scan-filedict",
+        nargs='*',
+        default={},
+        action=ParseKwargs,
+        help="Scan information for training, {'data file': ['JSON file']}"
+    )
+    parser.add_argument(
+        "--valid-scan-filedict",
+        nargs='*',
+        default={},
+        action=ParseKwargs,
+        help="Scan information for validation, {'data file': ['JSON file']}"
+    )
+    parser.add_argument(
+        "--train-report-filedict",
+        nargs='*',
+        default={},
+        action=ParseKwargs,
+        help="Report information for training, {'data file': ['JSON file']}"
+    )
+    parser.add_argument(
+        "--valid-report-filedict",
+        nargs='*',
+        default={},
+        action=ParseKwargs,
+        help="Report information for validation, {'data file': ['JSON file']}"
+    )
+    parser.add_argument(
+        "--train-uid-filedict",
+        nargs='*',
+        default={},
+        action=ParseKwargs,
+        help="Resampled UIDs for training, {'data file': ['CSV file']}"
+    )
+    parser.add_argument(
+        "--mri",
+        nargs='*',
+        default={},
+        action=ParseKwargs,
+        help="Information for internal MRI zero-shot evaluation, {'data_root': '...', 'input_file': '...'}"
+    )
+    parser.add_argument(
+        "--ct",
+        nargs='*',
+        default={},
+        action=ParseKwargs,
+        help="Information for internal CT zero-shot evaluation, {'data_root': '...', 'input_file': '...'}"
+    )
+    parser.add_argument(
+        "--finetune",
+        default=None,
+        type=str,
+        help="Path to finetune checkpoint (default: none)",
+    )
+    parser.add_argument(
+        "--accum-batch", 
+        type=int, 
+        default=1, 
+        help="Alleviate CPU's out-of-memory problem. It is independent to --accum-freq."
+    )
+    parser.add_argument(
+        "--num-scans",
+        type=int,
+        default=10,
+        help="Maximum # scans per study per training step."
+    )
 
+    args = parser.parse_args(args)
     if 'timm' not in args.opt:
         # set default opt params based on model name (only if timm optimizer not used)
-        default_params = get_default_params()
+        # NOTE use get_default_params() here as we modify the original function and use ViT by default.
+        default_params = get_default_params() 
         for name, val in default_params.items():
             if getattr(args, name) is None:
                 setattr(args, name, val)
-
     return args
