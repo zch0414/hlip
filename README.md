@@ -153,6 +153,8 @@ torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 zeroshot_pubbrain5.p
 --workers 8
 ```
 
+Use <code>--huggingface Zch0414/hlip-2025-10-08</code> to try the newest model directly.
+
 
 **External Evaluation (RSNA)**
 ```bash
@@ -162,3 +164,5 @@ torchrun --rdzv_endpoint=localhost:29500 --nproc_per_node 8 zeroshot_rsna.py \
 --data-root /path/to/data/RSNA \
 --workers 8
 ```
+
+Use <code>--huggingface Zch0414/hlip-2025-10-08</code> to try the newest model directly.
