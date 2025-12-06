@@ -43,6 +43,8 @@ make install-training
 | BrainMRI (220K) | CLIP |  <code>8, 16, 16</code> |<code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/12BwJvd6IEZynXM8jkled0ND7t11iuySj/view?usp=drive_link) |
 | HeadCT (240K) | CLIP | <code>8, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1rfoz-kzF0iwaMQ-4MuR7F4NlTjtPIZa7/view?usp=drive_link) |
 
+Future models will be released on HuggingFace and announced in the **Updates** section.
+
 ### Demo
 Chest CT: an example from the external Rad-ChestCT dataset.
 ```bash
