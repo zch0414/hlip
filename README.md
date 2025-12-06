@@ -36,15 +36,12 @@ make install
 make install-training
 ```
 
-### Model Card
-| Data | Objective | Patch Size | Attention | Model | Performance |
-| :--------: | :--------: | :--------: | :--------: | :--------: | :--------: |
-| CT-RATE (20K) | SigLIP | <code>8, 24, 24</code> | <code>slice</code> + <code>scan</code> | ViT Base | -/- |
-| CT-RATE (20K) | CLIP | <code>8, 24, 24</code> | <code>slice</code> + <code>scan</code> | [ViT Base](https://drive.google.com/file/d/1muu7L9H3KaL3nq3fNtN8kKF1eDK3R5Z4/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP | <code>16, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1uUdcE0TYx3K2YU7FQMfwb2FsFQjQcGil/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP |  <code>8, 16, 16</code> |<code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/12BwJvd6IEZynXM8jkled0ND7t11iuySj/view?usp=drive_link) | -/- |
-| BrainMRI (220K) | CLIP | <code>8, 16, 16</code> | <code>slice</code> + <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1FgOS3W6LhnhH4gJlbASPopUEXChcjeqy/view?usp=drive_link) | -/- |
-| HeadCT (240K) | CLIP | <code>8, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1rfoz-kzF0iwaMQ-4MuR7F4NlTjtPIZa7/view?usp=drive_link) | -/- |
+### Models
+| Data | Objective | Patch Size | Attention | Model |
+| :--------: | :--------: | :--------: | :--------: | :--------: |
+| CT-RATE (20K) | CLIP | <code>8, 24, 24</code> | <code>slice</code> + <code>scan</code> | [ViT Base](https://drive.google.com/file/d/1muu7L9H3KaL3nq3fNtN8kKF1eDK3R5Z4/view?usp=drive_link) |
+| BrainMRI (220K) | CLIP |  <code>8, 16, 16</code> |<code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/12BwJvd6IEZynXM8jkled0ND7t11iuySj/view?usp=drive_link) |
+| HeadCT (240K) | CLIP | <code>8, 16, 16</code> | <code>scan</code> + <code>study</code> | [ViT Base](https://drive.google.com/file/d/1rfoz-kzF0iwaMQ-4MuR7F4NlTjtPIZa7/view?usp=drive_link) |
 
 ### Demo
 Chest CT: an example from the external Rad-ChestCT dataset.
