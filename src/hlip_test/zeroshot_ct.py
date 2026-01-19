@@ -145,7 +145,7 @@ def run(model, tokenizer, dataloader, args):
 
             with autocast():
                 model_out = model(image=image)
-                image_features = model_out['image_features']
+                image_features = model_out['image_features'][:, 0, :]
                 logits_per_image = image_features @ classifier
                 prediction.append(logits_per_image)
 

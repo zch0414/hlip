@@ -17,15 +17,29 @@ class StudyInfo(object):
             scans.remove('VPCT_Stroke__PERFUSION__1_5__H20f_8-DIAMOX_CHALLENGE_SCAN_1-Protocol_2_BoneWindow')
         if uid == 'BRAIN_UM_1EDAA6D2' and 'VPCT_Stroke___PERFUSION__1_5__Hr35_4-DIAMOX_CHALLENGE_SCAN_1-Protocol_BrainWindow' in scans:
             scans.remove('VPCT_Stroke___PERFUSION__1_5__Hr35_4-DIAMOX_CHALLENGE_SCAN_1-Protocol_BrainWindow')
+        if uid == 'BRAIN_UM_1EDAA6D2' and 'VPCT_Stroke___PERFUSION__1_5__Hr35_25-DIAMOX_CHALLENGE_SCAN_1-Protocol_BrainWindow' in scans:
+            scans.remove('VPCT_Stroke___PERFUSION__1_5__Hr35_25-DIAMOX_CHALLENGE_SCAN_1-Protocol_BrainWindow')
+        if uid == 'BRAIN_UM_1F9E66BC' and 'VPCT_Stroke__PERFUSION__1_5__H20f_28-DIAMOX_CHALLENGE_SCAN_1-Protocol_2_BloodWindow' in scans:
+            scans.remove('VPCT_Stroke__PERFUSION__1_5__H20f_28-DIAMOX_CHALLENGE_SCAN_1-Protocol_2_BloodWindow')
+        if uid == 'BRAIN_UM_0D09E9AB' and 'VPCT_Stroke_PERFUSION__1_5__Hr35_2nd_30-DIAMOX_CHALLENGE_SCAN_1-Protocol_BloodWindow' in scans:
+            scans.remove('VPCT_Stroke_PERFUSION__1_5__Hr35_2nd_30-DIAMOX_CHALLENGE_SCAN_1-Protocol_BloodWindow')
+        if uid == 'BRAIN_UM_32C15A8B' and 'VPCT_Stroke__DynMulti4D__1_5__H20f_3-BRAIN_PERFUSION-Protocol_BloodWindow' in scans:
+            scans.remove('VPCT_Stroke__DynMulti4D__1_5__H20f_3-BRAIN_PERFUSION-Protocol_BloodWindow')
+        if uid == 'BRAIN_UM_3A37E8E4' and 'VPCT_Stroke__DynMulti4D__1_5__H20f_23-BRAIN_PERFUSION-Protocol_BrainWindow' in scans:
+            scans.remove('VPCT_Stroke__DynMulti4D__1_5__H20f_23-BRAIN_PERFUSION-Protocol_BrainWindow')
 
         self.scans = np.array([os.path.join(data_root, uid, scan, 'img.pt') for scan in scans])
         self.report = np.array(reports)
     
+    def get_sentence(self, idx, shuffle):
+        if shuffle:
+            return 'This study shows: ' + ' '.join(np.random.permutation(self.report).tolist()[idx: idx + 1])
+        else:
+            return 'This study shows: ' + ' '.join(self.report.tolist()[idx: idx + 1])
+        
     def get_report(self, shuffle):
         if shuffle:
-            # NOTE: do sentence dropout (hard code ablation)
-            return 'This study shows: ' + ' '.join(np.random.permutation(self.report).tolist()[0: 1])
-            # return 'This study shows: ' + ' '.join(np.random.permutation(self.report).tolist())
+            return 'This study shows: ' + ' '.join(np.random.permutation(self.report).tolist())
         else:
             return 'This study shows: ' + ' '.join(self.report.tolist())
 
@@ -75,7 +89,7 @@ class StudyDataset(Dataset):
                 self.studies.append(StudyInfo(data_file, uid, uid2scans[uid], uid2reports[uid]))
 
         # debug
-        # self.studies = self.studies[: 25600]
+        # self.studies = self.studies[: 1536]
 
         self.num_scans = num_scans
         self.tokenizer = tokenizer
@@ -87,7 +101,10 @@ class StudyDataset(Dataset):
     
     def __getitem__(self, idx):
         study = self.studies[idx] # get study
+        
+        sentence = self.tokenizer([str(study.get_sentence(idx=0, shuffle=self.is_train))])[0] # get sentence
         report = self.tokenizer([str(study.get_report(shuffle=self.is_train))])[0] # get report
+        
         scans = study.get_scan(shuffle=self.is_train) # get scans
         repeats = -(-self.num_scans // len(scans)) if self.is_train else 1
         scans *= repeats
@@ -101,7 +118,7 @@ class StudyDataset(Dataset):
             image.append(img[None, ...])
 
         # NOTE: convert image to torch.float16 by default
-        return {'image': torch.stack(image, dim=0).to(dtype=torch.float16), 'report': report}
+        return {'image': torch.stack(image, dim=0).to(dtype=torch.float16), 'sentence': sentence, 'report': report}
 
 
 def get_dataset(args, tokenizer, is_train):

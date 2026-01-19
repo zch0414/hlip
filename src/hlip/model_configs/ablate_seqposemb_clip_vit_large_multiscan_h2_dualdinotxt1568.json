@@ -1,7 +1,8 @@
 {
-    "embed_dim": 512,
+    "embed_dim": 768,
+    "init_logit_bias": 2.659260036932778,
     "vision_cfg": {
-        "timm_model_name": "vit_base_multiscan_h2_token1536",
+        "timm_model_name": "ablate_seqposemb_vit_large_multiscan_h2_dualdinotxt1568",
         "timm_model_pretrained": true,
         "timm_drop_path": 0.2,
         "timm_pool": "token",

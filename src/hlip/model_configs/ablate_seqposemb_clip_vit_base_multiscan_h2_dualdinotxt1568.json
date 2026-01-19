@@ -1,17 +1,18 @@
 {
-    "embed_dim": 512,
+    "embed_dim": 768,
+    "init_logit_bias": 2.659260036932778,
     "vision_cfg": {
-        "timm_model_name": "vit_base_multiscan_h2_token1176",
+        "timm_model_name": "ablate_seqposemb_vit_base_multiscan_h2_dualdinotxt1568",
         "timm_model_pretrained": true,
         "timm_drop_path": 0.2,
         "timm_pool": "token",
-        "timm_proj": "mlp"
+        "timm_proj": "linear"
     },
     "text_cfg": {
         "hf_model_name": "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
         "hf_tokenizer_name": "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
         "hf_pooler_type": "cls_last_hidden_state_pooler",
-        "hf_proj_type": "mlp",
+        "hf_proj_type": "linear",
         "context_length": 256
     }
 }

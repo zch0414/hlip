@@ -210,7 +210,7 @@ class HLIPVisualEncoderRope(VisionTransformer):
             x (tensor): input tokens with [B * num_scans * num_slices, num_prefix_tokens + L, C].
             num_scans (int): number of scans in one study.
             num_slices (int): number of slices in on scan.
-            keep_indices (tensor): indices with [B * num_scans * num_slices, L, C].
+            keep_indices (tensor): indices with [B * num_scans * num_slices, L].
 
         Returns:
             x: [B, num_prefix_tokens + num_scans * num_slices * L, C].
@@ -256,7 +256,7 @@ class HLIPVisualEncoderRope(VisionTransformer):
             x (tensor): input tokens with [B, num_prefix_tokens + num_scans * num_slices * L, C].
             num_scans (int): number of scans in one study.
             num_slices (int): number of slices in one scan.
-            keep_indices (tensor): indices with [B, num_scans * num_slices * L, C].
+            keep_indices (tensor): indices with [B, num_scans * num_slices * L].
 
         Returns:
             x: [B * num_scans * num_slices, num_prefix_tokens + L, C].
@@ -279,7 +279,7 @@ class HLIPVisualEncoderRope(VisionTransformer):
         Args:
             x (tensor): input tokens with [B, num_prefix_tokens + num_scans * L, C].
             num_scans (int): number of scans in one study.
-            keep_indices (tensor): indices with [B, num_scans * L, C].
+            keep_indices (tensor): indices with [B, num_scans * L].
 
         Returns:
             x: [B * num_scans, num_prefix_tokens + L, C].
@@ -305,7 +305,7 @@ class HLIPVisualEncoderRope(VisionTransformer):
             keep_indices (tensor): indices with [B * num_scans, num_slices * L].
 
         Returns:
-            x: [B * num_scans * num_slices, num_prefix_tokens + L, C].
+            x: [B * num_scans * num_slices, num_prefix_tokens + L].
             keep_indices: [B * num_scans * num_slices, L].
         """
         prefix_tokens, src = x[:, :self.num_prefix_tokens, :].contiguous(), x [:, self.num_prefix_tokens:, :].contiguous()
@@ -365,10 +365,11 @@ class HLIPVisualEncoderRope(VisionTransformer):
 
     # NOTE: DION.TXT's head
     def forward_head_dinotxt(self, x, pre_logits=False):
-        prefix_tokens = x[:, 0:self.num_prefix_tokens].mean(dim=1)
-        visual_tokens = x[:, self.num_prefix_tokens:].mean(dim=1)
+        prefix_tokens = x[:, 0:self.num_prefix_tokens]
+        visual_tokens = x[:, self.num_prefix_tokens:].mean(dim=1, keepdim=True)
+        visual_tokens = visual_tokens.expand(-1, self.num_prefix_tokens, -1)
+        x = torch.cat([prefix_tokens, visual_tokens], dim=-1) # [b, num_prefix_tokens, 2*c]
 
-        x = torch.cat([prefix_tokens, visual_tokens], dim=1)
         x = self.fc_norm(x)
         x = self.head_drop(x)
         return x if pre_logits else self.head(x)
@@ -379,6 +380,8 @@ class HLIPVisualEncoderRope(VisionTransformer):
             x = self.forward_head_dinotxt(x)
         else:
             x = self.forward_head(x)
+            if self.num_prefix_tokens == 1:
+                x = x.unsqueeze(1)
         return x
 
 

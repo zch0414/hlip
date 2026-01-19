@@ -51,8 +51,7 @@ def study_pos_embed(max_num_scans, grid_size, embed_dim, pretrained_posemb=None)
         sequential_posemb: A tensor of shape [1, max_num_scans, embed_dim]
     """
     if pretrained_posemb is not None: 
-        # build mri position embedding from pretrained_posemb:
-        # study_posemb (1d) + slice_posemb (1d) + pretrained_posemb (2d)
+        # build mri position embedding from pretrained_posemb
         pretrained_posemb = resample_2d_posemb(
             pretrained_posemb,
             new_size=(grid_size[1], grid_size[2]),
@@ -65,34 +64,35 @@ def study_pos_embed(max_num_scans, grid_size, embed_dim, pretrained_posemb=None)
             cls_token=False
         ) # [n, embed_dim]
         slice_posemb = torch.from_numpy(slice_posemb).float()
-        spatial_posemb = slice_posemb[None, :, None, None, :] + pretrained_posemb[:, None, :, :, :] 
-        if max_num_scans > 1:
-            sequential_posemb = get_1d_sincos_pos_embed(
-                embed_dim=embed_dim,
-                sequence_len=max_num_scans,
-                cls_token=False
-            ) # [n, embed_dim]
-            sequential_posemb = torch.from_numpy(sequential_posemb).float()[None, ...]
-        else:
-            sequential_posemb = None
+        spatial_posemb = slice_posemb[None, :, None, None, :] + pretrained_posemb[:, None, :, :, :]
     else: 
-        # build mri position embedding from scratch: study_posemb (1d) + sequential_posemb (3d)
-        spatial_posemb = get_3d_sincos_pos_embed(
+        # build mri position embedding from scratch
+        d_posemb = get_1d_sincos_pos_embed(
+            embed_dim=embed_dim,
+            sequence_len=grid_size[0],
+            cls_token=False
+        ) # [n, embed_dim]
+        d_posemb = torch.from_numpy(d_posemb).float()
+
+        hw_posemb = get_2d_sincos_pos_embed(
             embed_dim=embed_dim, 
-            grid_sizes=grid_size,
+            grid_sizes=(grid_size[1], grid_size[2]),
             cls_token=False,
             flatten=False,
-        ) # [d, h, w, embed_dim]
-        spatial_posemb = torch.from_numpy(spatial_posemb).float()[None, ...]
-        if max_num_scans > 1:
-            sequential_posemb = get_1d_sincos_pos_embed(
-                embed_dim=embed_dim,
-                sequence_len=max_num_scans,
-                cls_token=False,
-            ) # [n, embed_dim]
-            sequential_posemb = torch.from_numpy(sequential_posemb).float()[None, ...]
-        else:
-            sequential_posemb = None
+        ) # [h, w, embed_dim]
+        hw_posemb = torch.from_numpy(hw_posemb).float()
+
+        spatial_posemb = d_posemb[None, :, None, None, :] + hw_posemb[None, None, :, :, :]
+
+    if max_num_scans > 1:
+        sequential_posemb = get_1d_sincos_pos_embed(
+            embed_dim=embed_dim,
+            sequence_len=max_num_scans,
+            cls_token=False,
+        ) # [n, embed_dim]
+        sequential_posemb = torch.from_numpy(sequential_posemb).float()[None, ...]
+    else:
+        sequential_posemb = None
             
     return spatial_posemb, sequential_posemb
 

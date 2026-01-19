@@ -268,7 +268,7 @@ def run(model, tokenizer, dataloader, args):
             with autocast():
                 model_out = model(image=image)
                 logit_scale = model_out['logit_scale']
-                image_features = model_out['image_features']
+                image_features = model_out['image_features'][:, 0, :]
                 logits_per_image = logit_scale * image_features @ classifier
                 prediction.append(logits_per_image.detach().cpu())
             
