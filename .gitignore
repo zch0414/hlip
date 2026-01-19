@@ -148,7 +148,3 @@ core.*
 results/
 wandb/
 logs/
-hf_staging/
-COMMAND.md
-ct.csv
-mri.csv
