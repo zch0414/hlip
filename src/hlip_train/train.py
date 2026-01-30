@@ -122,16 +122,16 @@ def train_one_epoch(model, data, loss, epoch, optimizer, scaler, scheduler, dist
                 model_out.pop("text_features")
 
                 logit_scale_sentence = model_out.pop("logit_scale")
-                model_out["image_features_sentence"] = image_features[:, 0, :]
+                model_out["image_features_sentence"] = image_features[:, 0, :].contiguous()
                 if image_features.shape[1] == 1:
                     logit_scale_report = None
                     model_out["text_features_sentence"] = model(text=sentences).pop("text_features")
                 elif image_features.shape[1] == 2:
                     logit_scale_report = model_out.pop("logit_bias").exp() # FIXME: currently use logit_bias hack the logit_scale for report
-                    model_out["image_features_report"] = image_features[:, 1, :]
+                    model_out["image_features_report"] = image_features[:, 1, :].contiguous()
                     text_features_sentence, text_features_report = model(text=torch.cat([sentences, reports])).pop("text_features").chunk(2, dim=0)
-                    model_out["text_features_sentence"] = text_features_sentence
-                    model_out["text_features_report"] = text_features_report
+                    model_out["text_features_sentence"] = text_features_sentence.contiguous()
+                    model_out["text_features_report"] = text_features_report.contiguous()
                     
                 model_out_sentence = {
                     "image_features": model_out.pop("image_features_sentence"),
